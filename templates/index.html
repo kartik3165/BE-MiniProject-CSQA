@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Forensic Analysis Tool</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #17a2b8;
+            --light-bg: #f8f9fa;
+            --dark-bg: #343a40;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .upload-section {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .upload-zone {
+            border: 3px dashed #dee2e6;
+            border-radius: 15px;
+            padding: 60px 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--light-bg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-zone:hover {
+            border-color: var(--secondary-color);
+            background: rgba(52, 152, 219, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .upload-zone.dragover {
+            border-color: var(--success-color);
+            background: rgba(46, 204, 113, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.3rem;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn-upload {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--success-color) 100%);
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 50px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-upload:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+
+        .progress-section {
+            display: none;
+            padding: 40px;
+        }
+
+        .progress-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .progress-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            background: var(--light-bg);
+        }
+
+        .progress-icon {
+            font-size: 1.5rem;
+            width: 40px;
+            text-align: center;
+            margin-right: 15px;
+        }
+
+        .progress-content {
+            flex: 1;
+        }
+
+        .progress-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .results-section {
+            display: none;
+            padding: 40px;
+        }
+
+        .results-tabs {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tabs {
+            border-bottom: none;
+            background: var(--primary-color);
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 600;
+            padding: 15px 25px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: white;
+            color: var(--primary-color);
+            border-radius: 0;
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-content {
+            padding: 30px;
+            min-height: 400px;
+        }
+
+        .info-card {
+            background: var(--light-bg);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: #495057;
+            margin-top: 5px;
+        }
+
+        .hash-display {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--info-color);
+        }
+
+        .frame-alert {
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .frame-alert.dark {
+            background: rgba(108, 117, 125, 0.1);
+            border-left: 4px solid #6c757d;
+        }
+
+        .frame-alert.bright {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid var(--warning-color);
+        }
+
+        .video-preview {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .video-preview img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-processing {
+            background: rgba(255, 193, 7, 0.2);
+            color: var(--warning-color);
+        }
+
+        .status-complete {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-error {
+            background: rgba(231, 76, 60, 0.2);
+            color: var(--danger-color);
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .summary-stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            margin: 0 10px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .upload-zone {
+                padding: 40px 15px;
+            }
+
+            .upload-icon {
+                font-size: 3rem;
+            }
+
+            .summary-stats {
+                flex-direction: column;
+            }
+
+            .stat-item {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-search"></i> Video Forensic Analysis Tool</h1>
+                <p>Professional video analysis for digital forensics investigations</p>
+            </div>
+
+            <!-- Upload Section -->
+            <div id="upload-section" class="upload-section">
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">
+                        Drag and drop your video file here or click to browse
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">
+                            Supported formats: MP4, AVI, MOV, MKV, WMV, FLV, WEBM<br>
+                            Maximum file size: 500MB
+                        </small>
+                    </div>
+                    <input type="file" id="file-input" class="file-input" accept=".mp4,.avi,.mov,.mkv,.wmv,.flv,.webm">
+                    <button type="button" class="btn btn-upload mt-3"
+                        onclick="document.getElementById('file-input').click()">
+                        <i class="fas fa-folder-open me-2"></i>Select Video File
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progress-section" class="progress-section">
+                <div class="progress-card fade-in">
+                    <h4 class="mb-4"><i class="fas fa-cogs me-2"></i>Analysis in Progress</h4>
+
+                    <div id="selected-file" class="mb-4">
+                        <strong>File:</strong> <span id="filename"></span>
+                    </div>
+
+                    <div id="progress-items">
+                        <!-- Progress items will be inserted here -->
+                    </div>
+
+                    <div class="mt-4">
+                        <div id="current-status" class="text-center">
+                            <span class="status-badge status-processing">
+                                <i class="fas fa-spinner spinner me-2"></i>Initializing...
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="results-section">
+                <div class="results-tabs fade-in">
+                    <ul class="nav nav-tabs" id="results-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="overview-tab" data-bs-toggle="tab"
+                                data-bs-target="#overview" type="button" role="tab">
+                                <i class="fas fa-chart-line me-2"></i>Overview
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="metadata-tab" data-bs-toggle="tab" data-bs-target="#metadata"
+                                type="button" role="tab">
+                                <i class="fas fa-info-circle me-2"></i>Metadata
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="hash-tab" data-bs-toggle="tab" data-bs-target="#hash"
+                                type="button" role="tab">
+                                <i class="fas fa-fingerprint me-2"></i>Hash Analysis
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="frames-tab" data-bs-toggle="tab" data-bs-target="#frames"
+                                type="button" role="tab">
+                                <i class="fas fa-film me-2"></i>Frame Analysis
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="results-tab-content">
+                        <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                            <div id="overview-content">
+                                <!-- Overview content will be inserted here -->
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="metadata" role="tabpanel">
+                            <div id="metadata-content">
+                                <!-- Metadata content will be inserted here -->
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="hash" role="tabpanel">
+                            <div id="hash-content">
+                                <!-- Hash content will be inserted here -->
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="frames" role="tabpanel">
+                            <div id="frames-content">
+                                <!-- Frame analysis content will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="button" class="btn btn-upload" onclick="resetTool()">
+                        <i class="fas fa-redo me-2"></i>Analyze Another Video
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentFileId = null;
+        let progressInterval = null;
+
+        // File upload handling
+        const uploadZone = document.getElementById('upload-zone');
+        const fileInput = document.getElementById('file-input');
+
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+
+        uploadZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        function handleFileUpload(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            document.getElementById('filename').textContent = file.name;
+            showSection('progress');
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentFileId = data.file_id;
+                        startProgressMonitoring();
+                    } else {
+                        showError(data.error || 'Upload failed');
+                    }
+                })
+                .catch(error => {
+                    showError('Upload failed: ' + error.message);
+                });
+        }
+
+        function startProgressMonitoring() {
+            progressInterval = setInterval(() => {
+                if (currentFileId) {
+                    fetch(`/progress/${currentFileId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            updateProgress(data);
+
+                            if (data.status === 'complete') {
+                                clearInterval(progressInterval);
+                                loadResults();
+                            } else if (data.status && data.status.startsWith('error')) {
+                                clearInterval(progressInterval);
+                                showError(data.status);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Progress monitoring error:', error);
+                        });
+                }
+            }, 1000);
+        }
+
+        function updateProgress(data) {
+            const statusElement = document.getElementById('current-status');
+            const progressItems = document.getElementById('progress-items');
+
+            if (data.status === 'complete') {
+                statusElement.innerHTML = '<span class="status-badge status-complete"><i class="fas fa-check me-2"></i>Analysis Complete</span>';
+            } else if (data.status && data.status.startsWith('error')) {
+                statusElement.innerHTML = `<span class="status-badge status-error"><i class="fas fa-exclamation-triangle me-2"></i>${data.status}</span>`;
+            } else {
+                statusElement.innerHTML = `<span class="status-badge status-processing"><i class="fas fa-spinner spinner me-2"></i>${data.status || 'Processing...'}</span>`;
+            }
+
+            // Update progress items
+            progressItems.innerHTML = `
+                <div class="progress-item">
+                    <div class="progress-icon ${data.metadata_done ? 'text-success' : 'text-muted'}">
+                        <i class="fas ${data.metadata_done ? 'fa-check-circle' : 'fa-info-circle'}"></i>
+                    </div>
+                    <div class="progress-content">
+                        <div class="progress-title">Metadata Extraction</div>
+                        <div class="text-muted">Extracting video and audio properties</div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-icon ${data.hash_progress === 100 ? 'text-success' : 'text-muted'}">
+                        <i class="fas ${data.hash_progress === 100 ? 'fa-check-circle' : 'fa-fingerprint'}"></i>
+                    </div>
+                    <div class="progress-content">
+                        <div class="progress-title">Hash Calculation</div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: ${data.hash_progress || 0}%" aria-valuenow="${data.hash_progress || 0}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-icon ${data.frame_progress === 100 ? 'text-success' : 'text-muted'}">
+                        <i class="fas ${data.frame_progress === 100 ? 'fa-check-circle' : 'fa-film'}"></i>
+                    </div>
+                    <div class="progress-content">
+                        <div class="progress-title">Frame Analysis</div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: ${data.frame_progress || 0}%" aria-valuenow="${data.frame_progress || 0}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function loadResults() {
+            fetch(`/results/${currentFileId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'not_ready') {
+                        setTimeout(loadResults, 1000);
+                        return;
+                    }
+
+                    displayResults(data);
+                    showSection('results');
+                })
+                .catch(error => {
+                    showError('Failed to load results: ' + error.message);
+                });
+        }
+
+        function displayResults(data) {
+            displayOverview(data);
+            displayMetadata(data.metadata);
+            displayHash(data.hash);
+            displayFrameAnalysis(data.frames);
+        }
+
+        function displayOverview(data) {
+            const overviewContent = document.getElementById('overview-content');
+
+            let overviewHtml = '';
+
+            // Video preview
+            if (data.preview_frame) {
+                overviewHtml += `
+                    <div class="video-preview">
+                        <h5>Video Preview</h5>
+                        <img src="data:image/jpeg;base64,${data.preview_frame}" alt="Video Preview" class="img-fluid">
+                    </div>
+                `;
+            }
+
+            // Summary statistics
+            if (data.frames && data.frames.summary) {
+                const summary = data.frames.summary;
+                overviewHtml += `
+                    <h5 class="mt-4 mb-3">Analysis Summary</h5>
+                    <div class="summary-stats">
+                        <div class="stat-item">
+                            <div class="stat-value">${data.frames.total_frames || 'N/A'}</div>
+                            <div class="stat-label">Total Frames</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.frames.frame_rate || 'N/A'}</div>
+                            <div class="stat-label">Frame Rate</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${data.frames.duration || 'N/A'}</div>
+                            <div class="stat-label">Duration</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value">${summary.normal_count || 0}</div>
+                            <div class="stat-label">Normal Frames</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // File integrity
+            overviewHtml += `
+                <h5 class="mt-4 mb-3">File Integrity</h5>
+                <div class="info-card">
+                    <div class="info-label">SHA-256 Hash</div>
+                    <div class="info-value">
+                        <code>${data.hash && data.hash.hash ? data.hash.hash.substring(0, 16) + '...' : 'Calculating...'}</code>
+                    </div>
+                </div>
+            `;
+
+            overviewContent.innerHTML = overviewHtml;
+        }
+
+        function displayMetadata(metadata) {
+            const metadataContent = document.getElementById('metadata-content');
+
+            if (metadata && metadata.error) {
+                metadataContent.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${metadata.error}
+                    </div>
+                `;
+                return;
+            }
+
+            let metadataHtml = '';
+
+            if (metadata && metadata.video) {
+                metadataHtml += `
+                    <h5 class="mb-3"><i class="fas fa-video me-2"></i>Video Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Codec</div>
+                                <div class="info-value">${metadata.video.codec}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Duration</div>
+                                <div class="info-value">${metadata.video.duration}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Resolution</div>
+                                <div class="info-value">${metadata.video.width} × ${metadata.video.height}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Frame Rate</div>
+                                <div class="info-value">${metadata.video.frame_rate}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Bit Rate</div>
+                                <div class="info-value">${metadata.video.bit_rate}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Color Space</div>
+                                <div class="info-value">${metadata.video.color_space}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (metadata && metadata.audio) {
+                metadataHtml += `
+                    <h5 class="mb-3 mt-4"><i class="fas fa-volume-up me-2"></i>Audio Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Codec</div>
+                                <div class="info-value">${metadata.audio.codec}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Sample Rate</div>
+                                <div class="info-value">${metadata.audio.sample_rate}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Channels</div>
+                                <div class="info-value">${metadata.audio.channels}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-card">
+                                <div class="info-label">Bit Rate</div>
+                                <div class="info-value">${metadata.audio.bit_rate}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (!metadataHtml) {
+                metadataHtml = `
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No metadata information available for this file.
+                    </div>
+                `;
+            }
+
+            metadataContent.innerHTML = metadataHtml;
+        }
+
+        function displayHash(hash) {
+            const hashContent = document.getElementById('hash-content');
+
+            if (hash && hash.error) {
+                hashContent.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${hash.error}
+                    </div>
+                `;
+                return;
+            }
+
+            if (hash) {
+                const hashHtml = `
+                    <h5 class="mb-3"><i class="fas fa-fingerprint me-2"></i>File Hash Information</h5>
+                    
+                    <div class="info-card">
+                        <div class="info-label">Algorithm</div>
+                        <div class="info-value">${hash.algorithm}</div>
+                    </div>
+                    
+                    <div class="info-card">
+                        <div class="info-label">File Size</div>
+                        <div class="info-value">${hash.file_size}</div>
+                    </div>
+                    
+                    <h6 class="mt-4 mb-3">SHA-256 Hash Value</h6>
+                    <div class="hash-display">
+                        ${hash.hash}
+                    </div>
+                    
+                    <h6 class="mt-4 mb-3">Hash Breakdown</h6>
+                    <div class="hash-display">
+                        ${hash.hash_breakdown ? hash.hash_breakdown.join('<br>') : 'N/A'}
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Note:</strong> This hash can be used to verify file integrity and authenticity. 
+                        Any modification to the video file will result in a completely different hash value.
+                    </div>
+                `;
+
+                hashContent.innerHTML = hashHtml;
+            }
+        }
+
+        function displayFrameAnalysis(frames) {
+            const framesContent = document.getElementById('frames-content');
+
+            if (frames && frames.error) {
+                framesContent.innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        ${frames.error}
+                    </div>
+                `;
+                return;
+            }
+
+            if (frames) {
+                let framesHtml = `
+                    <h5 class="mb-3"><i class="fas fa-film me-2"></i>Frame Analysis Report</h5>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="info-card text-center">
+                                <div class="info-label">Total Frames</div>
+                                <div class="info-value">${frames.total_frames}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-card text-center">
+                                <div class="info-label">Frame Rate</div>
+                                <div class="info-value">${frames.frame_rate}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-card text-center">
+                                <div class="info-label">Duration</div>
+                                <div class="info-value">${frames.duration}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-card text-center">
+                                <div class="info-label">Normal Frames</div>
+                                <div class="info-value">${frames.summary ? frames.summary.normal_count : 'N/A'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Dark frames
+                if (frames.dark_frames && frames.dark_frames.length > 0) {
+                    framesHtml += `
+                        <h6 class="mt-4 mb-3">
+                            <i class="fas fa-moon me-2"></i>Dark Frames Detected 
+                            <span class="badge bg-secondary">${frames.summary ? frames.summary.dark_count : frames.dark_frames.length}</span>
+                        </h6>
+                        <div class="mb-3">
+                    `;
+
+                    frames.dark_frames.forEach(frame => {
+                        framesHtml += `
+                            <div class="frame-alert dark">
+                                Frame ${frame.frame}: Low brightness detected (${frame.brightness})
+                            </div>
+                        `;
+                    });
+
+                    framesHtml += '</div>';
+                }
+
+                // Bright frames
+                if (frames.bright_frames && frames.bright_frames.length > 0) {
+                    framesHtml += `
+                        <h6 class="mt-4 mb-3">
+                            <i class="fas fa-sun me-2"></i>Bright Frames Detected 
+                            <span class="badge bg-warning">${frames.summary ? frames.summary.bright_count : frames.bright_frames.length}</span>
+                        </h6>
+                        <div class="mb-3">
+                    `;
+
+                    frames.bright_frames.forEach(frame => {
+                        framesHtml += `
+                            <div class="frame-alert bright">
+                                Frame ${frame.frame}: High brightness detected (${frame.brightness})
+                            </div>
+                        `;
+                    });
+
+                    framesHtml += '</div>';
+                }
+
+                // Summary
+                if (frames.summary) {
+                    framesHtml += `
+                        <div class="alert alert-info mt-4">
+                            <h6><i class="fas fa-chart-bar me-2"></i>Analysis Summary</h6>
+                            <div class="row mt-3">
+                                <div class="col-md-4 text-center">
+                                    <strong>${frames.summary.dark_count}</strong><br>
+                                    <small class="text-muted">Dark Frames</small>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <strong>${frames.summary.bright_count}</strong><br>
+                                    <small class="text-muted">Bright Frames</small>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <strong>${frames.summary.normal_count}</strong><br>
+                                    <small class="text-muted">Normal Frames</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                framesContent.innerHTML = framesHtml;
+            }
+        }
+
+        function showSection(section) {
+            document.getElementById('upload-section').style.display = section === 'upload' ? 'block' : 'none';
+            document.getElementById('progress-section').style.display = section === 'progress' ? 'block' : 'none';
+            document.getElementById('results-section').style.display = section === 'results' ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const uploadSection = document.getElementById('upload-section');
+            uploadSection.innerHTML = `
+                <div class="text-center">
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Error:</strong> ${message}
+                    </div>
+                    <button type="button" class="btn btn-upload" onclick="location.reload()">
+                        <i class="fas fa-redo me-2"></i>Try Again
+                    </button>
+                </div>
+            `;
+            showSection('upload');
+        }
+
+        function resetTool() {
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+            currentFileId = null;
+            location.reload();
+        }
+
+        // Initialize
+        showSection('upload');
+    </script>
+</body>
+
+</html>
